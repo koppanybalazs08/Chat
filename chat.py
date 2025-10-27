@@ -2,6 +2,8 @@ import socket
 import threading
 from time import time
 import tkinter as tk
+import tkinter.scrolledtext as st
+
 
 hostname = socket.gethostname()
 SERVER = socket.gethostbyname(hostname) 
@@ -17,7 +19,6 @@ client_names = {}
 startt = 0
 
 def broadcast(message, sender_conn=None):
-    """Send message to all connected clients except sender"""
     for client in clients:
         if client != sender_conn:
             try:
@@ -78,6 +79,12 @@ def start(live_server):
 def send(msg, live_server):
     global endt
     global startt
+    global output_msg
+
+    if not '#NAME#' in msg:
+        output_msg.insert(tk.INSERT, msg + '\n')
+        output_msg.see('end')
+
     endt = int(time() * 1000)
     if endt - startt >= 500 or startt == None:
         msg += '\n'
@@ -90,7 +97,6 @@ def send(msg, live_server):
         startt = int(time() * 1000)
 
 def receive(live_server):
-    """Receive messages from server"""
     while True:
         try:
             msg_len = live_server.recv(HEADER).decode(FORMAT)
@@ -98,6 +104,10 @@ def receive(live_server):
                 msg_len = int(msg_len.strip())
                 msg = live_server.recv(msg_len).decode(FORMAT)
                 print(msg)
+                global output_msg
+                if not '#NAME#' in msg:
+                    output_msg.insert(tk.INSERT, msg + '\n')
+                    output_msg.see('end')
         except:
             break
 
@@ -122,11 +132,18 @@ def client():
     window = tk.Tk()
     window.title('Chat')
 
-    chat_label = tk.Label(window, text = 'Chat (jippi vizuális)')
-    input_msg = tk.Text(window, height = 15, width = 50, bg = "light green")
-    send_button = tk.Button(window, height = 2, width = 20, text ="Üzenet küldése", command = lambda:send(input_msg.get("1.0", "end-1c"),live_server))
+    output_label = tk.Label(window, text = 'Output') 
+    global output_msg
+    output_msg = st.ScrolledText(window, height = 15, width = 50, wrap = 'word', bg = 'light blue')
 
-    chat_label.pack()
+    input_label = tk.Label(window, text = 'Input') 
+    input_msg = tk.Text(window, height = 15, width = 50, wrap = 'word', bg = 'light green')
+
+    send_button = tk.Button(window, height = 2, width = 20, text = 'Üzenet küldése', command = lambda:send(input_msg.get("1.0", "end-1c"),live_server))
+
+    output_label.pack()
+    output_msg.pack()
+    input_label.pack()
     input_msg.pack()
     send_button.pack()
     window.mainloop()
