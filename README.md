@@ -1,3 +1,7 @@
 changelog:
--fél másodperces időzítés üzenetek között (spam elkerülése)
--működő kilépés
+-vizális kezelő felület
+
+futtatás:
+-futtatás előtt tkinter telepítendő(pip install tkinter)
+-c a csatlakozáshoz
+-h a chat hostolásáshoz

@@ -1,6 +1,7 @@
 import socket
 import threading
 from time import time
+import tkinter as tk
 
 hostname = socket.gethostname()
 SERVER = socket.gethostbyname(hostname) 
@@ -117,11 +118,18 @@ def client():
 
     name = '#NAME# ' + input('Név: ')
     send(name, live_server)
-    
-    usr_input = ''
-    while usr_input != DISCONNECT:
-        usr_input = input(': ') + '\n'
-        send(usr_input, live_server)
+
+    window = tk.Tk()
+    window.title('Chat')
+
+    chat_label = tk.Label(window, text = 'Chat (jippi vizuális)')
+    input_msg = tk.Text(window, height = 15, width = 50, bg = "light green")
+    send_button = tk.Button(window, height = 2, width = 20, text ="Üzenet küldése", command = lambda:send(input_msg.get("1.0", "end-1c"),live_server))
+
+    chat_label.pack()
+    input_msg.pack()
+    send_button.pack()
+    window.mainloop()
 
 choice = input('host/csatlakozás? (h/c) ')
 if choice == 'c':
