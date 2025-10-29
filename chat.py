@@ -31,7 +31,7 @@ def broadcast(message, sender_conn=None):
                 clients.remove(client)
 
 def manage_client(con, addr):
-    print(f'{addr} fellépett!\n')
+    global output_msg
     
     connected = True
     client_name = str(addr)
@@ -50,15 +50,16 @@ def manage_client(con, addr):
             if '#NAME# ' in msg:
                 client_name = msg.replace('#NAME# ', '')
                 client_names[con] = client_name
+                insert__to_output_msg(f'{client_name} csatlakozott a chathez')
                 broadcast(f'{client_name} csatlakozott a chathez', con)
             
             else:
-                print(f'{client_name}: {msg}')
+                insert__to_output_msg(f'{client_name}: {msg}')
                 broadcast(f'\n{client_name}: {msg}', con)
         
         else:
             connected = False
-            print(f'{client_name} Kilépett!')
+            insert__to_output_msg(f'{client_name} Kilépett!')
             broadcast(f'\n {client_name} kilépett a chatből', con)
     
     if con in clients:
@@ -68,13 +69,14 @@ def manage_client(con, addr):
     con.close()
 
 def start(live_server):
+    global output_msg
     live_server.listen()
     while True:
         con, addr = live_server.accept()
         clients.append(con)
-        thread = threading.Thread(target=manage_client, args=(con, addr))
+        thread = threading.Thread(target = manage_client, args=(con, addr))
         thread.start()
-        print(f'szerver méret: {threading.active_count() - 1}\n')
+        insert__to_output_msg(f'szerver méret: {threading.active_count() - 1}')
 
 def send(msg, live_server):
     global endt
@@ -82,8 +84,7 @@ def send(msg, live_server):
     global output_msg
 
     if not '#NAME#' in msg:
-        output_msg.insert(tk.INSERT, msg + '\n')
-        output_msg.see('end')
+        insert__to_output_msg(msg)
 
     endt = int(time() * 1000)
     if endt - startt >= 500 or startt == None:
@@ -96,6 +97,9 @@ def send(msg, live_server):
         live_server.send(msg_to_send)
         startt = int(time() * 1000)
 
+    elif endt - startt < 500:
+        insert__to_output_msg('Várj 0.5 másodpercet minden üzenet között!')
+
 def receive(live_server):
     while True:
         try:
@@ -106,17 +110,33 @@ def receive(live_server):
                 print(msg)
                 global output_msg
                 if not '#NAME#' in msg:
-                    output_msg.insert(tk.INSERT, msg + '\n')
-                    output_msg.see('end')
+                    insert__to_output_msg(msg)
         except:
             break
 
 def server():
+    server_window = tk.Tk()
+    server_window.title('Chat')
+
+    output_label = tk.Label(server_window, text = 'Output') 
+    global output_msg
+    output_msg = st.ScrolledText(server_window, height = 15, width = 50, wrap = 'word', bg = 'light blue')
+    output_msg.config(state = 'normal')
+
+    insert__to_output_msg(hostname + ' ' + SERVER)
+
     ADDR = (SERVER, PORT)
     live_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     live_server.bind(ADDR)
-    print('Indul a szerver...')
-    start(live_server)
+
+    output_label.pack()
+    output_msg.pack()
+
+    server_thread = threading.Thread(target=start, args=(live_server,), daemon=True)
+    server_thread.start()
+    output_msg.config(state = 'disabled')
+
+    server_window.mainloop()
 
 def client():
     ADDR = (input('address: '), PORT)
@@ -129,28 +149,36 @@ def client():
     name = '#NAME# ' + input('Név: ')
     send(name, live_server)
 
-    window = tk.Tk()
-    window.title('Chat')
+    client_window = tk.Tk()
+    client_window.title('Chat')
+    print('Chat megnyitva új ablakban')
 
-    output_label = tk.Label(window, text = 'Output') 
+    output_label = tk.Label(client_window, text = 'Output') 
     global output_msg
-    output_msg = st.ScrolledText(window, height = 15, width = 50, wrap = 'word', bg = 'light blue')
+    output_msg = st.ScrolledText(client_window, height = 15, width = 50, wrap = 'word', bg = 'light blue')
 
-    input_label = tk.Label(window, text = 'Input') 
-    input_msg = tk.Text(window, height = 15, width = 50, wrap = 'word', bg = 'light green')
+    input_label = tk.Label(client_window, text = 'Input') 
+    input_msg = tk.Text(client_window, height = 15, width = 50, wrap = 'word', bg = 'light green')
 
-    send_button = tk.Button(window, height = 2, width = 20, text = 'Üzenet küldése', command = lambda:send(input_msg.get("1.0", "end-1c"),live_server))
+    send_button = tk.Button(client_window, height = 2, width = 20, text = 'Üzenet küldése', command = lambda:send(input_msg.get("1.0", "end-1c"),live_server))
 
     output_label.pack()
     output_msg.pack()
     input_label.pack()
     input_msg.pack()
     send_button.pack()
-    window.mainloop()
+
+    client_window.mainloop()
+
+def insert__to_output_msg(msg):
+    global output_msg
+    output_msg.config(state='normal')
+    output_msg.insert(tk.INSERT, msg + '\n')
+    output_msg.see('end')
+    output_msg.config(state='disabled')   
 
 choice = input('host/csatlakozás? (h/c) ')
 if choice == 'c':
     client()
 elif choice == 'h':
-    print(hostname, SERVER)
     server()
