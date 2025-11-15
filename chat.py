@@ -37,7 +37,6 @@ def broadcast(message, sender_conn=None):
 #kliens management
 def manage_client(con, addr):
     global output_msg
-    global chat_history
     
     connected = True
     client_name = str(addr)
@@ -61,20 +60,17 @@ def manage_client(con, addr):
                 client_names[con] = client_name
                 insert_to_output_msg(f'{client_name} csatlakozott a chathez')
                 broadcast(f'{client_name} csatlakozott a chathez', con)
-                chat_history.append(f'{client_name} csatlakozott a chathez\n')
             
             #üzenet tovább küldése
             else:
                 insert_to_output_msg(f'{client_name}: {msg}')
-                broadcast(f'{client_name}: {msg}\n', con)
-                chat_history.append(f'{client_name}: {msg}\n')
+                broadcast(f'\n{client_name}: {msg}', con)
         
         #Kilépés
         else:
             connected = False
             insert_to_output_msg(f'{client_name} Kilépett!')
-            broadcast(f'{client_name} kilépett a chatből\n', con)
-            chat_history.append(f'{client_name} kilépett a chatből\n')
+            broadcast(f'\n {client_name} kilépett a chatből', con)
     
     if con in clients:
         clients.remove(con)
@@ -85,13 +81,7 @@ def manage_client(con, addr):
 #szerver indítása
 def start(live_server):
     global output_msg
-    global chat_history
-    
-    with open('history.txt', 'r', encoding = 'utf-8') as f:
-        chat_history = f.readlines()
-
     live_server.listen()
-    print(*chat_history)
     while True:
         con, addr = live_server.accept()
         clients.append(con)
@@ -142,7 +132,6 @@ def receive(live_server):
 #szerver futtatása + vizuális felület
 def server():
     global output_msg
-    global chat_history
 
     #vizuális felület létrehozása
     server_window = tk.Tk()
@@ -170,8 +159,6 @@ def server():
     output_msg.config(state = 'disabled')
 
     server_window.mainloop()
-    with open('history.txt' , 'w', encoding = 'utf-8') as f:
-        f.write(*chat_history)
 
 #kliens futtatása + vizuális felület
 def client():
@@ -221,8 +208,6 @@ def insert_to_output_msg(msg):
     output_msg.insert(tk.INSERT, msg + '\n')
     output_msg.see('end')
     output_msg.config(state = 'disabled')   
-
-chat_history = []
 
 choice = input('host/csatlakozás? (h/c) ')
 if choice == 'c':
