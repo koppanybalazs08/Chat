@@ -183,7 +183,7 @@ def client():
     live_server.connect(ADDR)
 
     #receive() függvény indítása külön thread-en
-    receive_thread = threading.Thread(target = receive, args = ( live_server ))
+    receive_thread = threading.Thread(target = receive, args = ( live_server, ))
     receive_thread.start()
 
     #Név megadása
