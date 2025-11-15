@@ -154,7 +154,7 @@ def server():
     output_msg.pack()
 
     #start() függvény indítása külön thread-en
-    server_thread = threading.Thread(target = start, args = ( live_server ), daemon = True)
+    server_thread = threading.Thread(target = start, args = ( live_server, ), daemon = True)
     server_thread.start()
     output_msg.config(state = 'disabled')
 
@@ -170,7 +170,7 @@ def client():
     live_server.connect(ADDR)
 
     #receive() függvény indítása külön thread-en
-    receive_thread = threading.Thread(target = receive, args = ( live_server ))
+    receive_thread = threading.Thread(target = receive, args = ( live_server, ))
     receive_thread.start()
 
     #Név megadása
