@@ -87,7 +87,7 @@ def start(live_server):
     global output_msg
     global chat_history
     
-    with open('history.txt', 'a+', encoding = 'utf-8') as f:
+    with open('history.txt', 'r', encoding = 'utf-8') as f:
         chat_history = f.readlines()
 
     live_server.listen()
@@ -165,7 +165,7 @@ def server():
     output_msg.pack()
 
     #start() függvény indítása külön thread-en
-    server_thread = threading.Thread(target = start, args = ( live_server, ), daemon = True)
+    server_thread = threading.Thread(target = start, args = ( live_server ), daemon = True)
     server_thread.start()
     output_msg.config(state = 'disabled')
 
